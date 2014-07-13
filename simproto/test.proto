@@ -1,0 +1,29 @@
+package simproto.test;
+
+message Request {
+  required string ver = 1 [default = "1.0"];
+  required string cmd = 2;
+  repeated string args = 3;
+}
+
+message Response {
+  required string ver = 1 [default = "1.0"];
+  
+  message ReturnCode {
+    required int32 err_no = 1 [default = 0];
+    required string err_msg = 2 [default = "OK"];
+  }
+  required ReturnCode code = 2;
+  
+  enum BodyType {
+    JSON = 0;
+    TEXT = 1;
+    XML = 2;
+  }
+  
+  message ReturnBody {
+    required BodyType type = 1 [default = JSON];
+    required string content = 2;
+  }
+  repeated ReturnBody body = 3;
+}

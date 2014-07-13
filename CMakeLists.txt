@@ -6,7 +6,9 @@ add_compile_options ($<$<CXX_COMPILER_ID:Clang>:-stdlib=libc++>)
 add_compile_options ($<$<CXX_COMPILER_ID:Clang>:-g>)
 add_compile_options ($<$<CXX_COMPILER_ID:Clang>:-O2>)
 
-#set( CMAKE_VERBOSE_MAKEFILE on )
+set( CMAKE_VERBOSE_MAKEFILE on )
+
+######################### libzks ##################################
 
 FIND_PATH(ZKS_INCLUDE_DIR
   libzks/libzks.h
@@ -16,7 +18,7 @@ FIND_PATH(ZKS_INCLUDE_DIR
   /usr/local/include/
   #MSVC
   "$ENV{LIB_DIR}/include"
-  $ENV{INCLUDE}
+  $ENV{ZKS_INCLUDE_PATH}
   #mingw
   c:/msys/local/include
   )
@@ -26,7 +28,7 @@ FIND_LIBRARY(ZKS_LIBRARY NAMES zks libzks PATHS
   "$ENV{HOME}/local/lib"
   #MSVC
   "$ENV{LIB_DIR}/lib"
-  $ENV{LIB}
+  $ENV{ZKS_LIB_PATH}
   #mingw
   c:/msys/local/lib
   )
@@ -43,6 +45,73 @@ IF (ZKS_FOUND)
 ELSE (ZKS_FOUND)
       MESSAGE(FATAL_ERROR "Could not find LIBZKS")
 ENDIF (ZKS_FOUND)
+
+######################### asio ##################################
+
+FIND_PATH(ASIO_INCLUDE_DIR
+  asio.hpp
+  PATHS
+  "$ENV{HOME}/local/include/"
+  /usr/include/
+  /usr/local/include/
+  #MSVC
+  "$ENV{LIB_DIR}/include"
+  $ENV{ASIO_INCLUDE_PATH}
+  #mingw
+  c:/msys/local/include
+  )
+
+IF (ASIO_INCLUDE_DIR)
+   SET(ASIO_FOUND TRUE)
+ENDIF (ASIO_INCLUDE_DIR)
+
+IF (ASIO_FOUND)
+   IF (NOT ASIO_FIND_QUIETLY)
+      MESSAGE(STATUS "Found asio.hpp : ${ASIO_INCLUDE_DIR}")
+   ENDIF (NOT ASIO_FIND_QUIETLY)
+ELSE (ASIO_FOUND)
+      MESSAGE(FATAL_ERROR "Could not find asio")
+ENDIF (ASIO_FOUND)
+
+######################### protobuff ##################################
+
+FIND_PATH(PROTOBUF_INCLUDE_DIR
+  google/protobuf/message.h
+  PATHS
+  "$ENV{HOME}/local/include/"
+  /usr/include/
+  /usr/local/include/
+  #MSVC
+  "$ENV{LIB_DIR}/include"
+  $ENV{PROTOBUF_INCLUDE_PATH}
+  #mingw
+  c:/msys/local/include
+  )
+FIND_LIBRARY(PROTOBUF_LIBRARY NAMES protobuf PATHS 
+  /usr/local/lib 
+  /usr/lib 
+  "$ENV{HOME}/local/lib"
+  #MSVC
+  "$ENV{LIB_DIR}/lib"
+  $ENV{PROTOBUF_LIB_PATH}
+  #mingw
+  c:/msys/local/lib
+  )
+
+IF (PROTOBUF_INCLUDE_DIR AND PROTOBUF_LIBRARY)
+   SET(PROTOBUF_FOUND TRUE)
+ENDIF (PROTOBUF_INCLUDE_DIR AND PROTOBUF_LIBRARY)
+
+IF (PROTOBUF_FOUND)
+   IF (NOT PROTOBUF_FIND_QUIETLY)
+      MESSAGE(STATUS "Found protobuf : ${PROTOBUF_LIBRARY}")
+      MESSAGE(STATUS "Found google/protobuf/message.h : ${PROTOBUF_INCLUDE_DIR}")
+   ENDIF (NOT PROTOBUF_FIND_QUIETLY)
+ELSE (PROTOBUF_FOUND)
+      MESSAGE(FATAL_ERROR "Could not find protobuf")
+ENDIF (PROTOBUF_FOUND)
+
+######################### libfcgi ##################################
 
 FIND_PATH(FCGI_INCLUDE_DIR
   fcgio.h
@@ -91,6 +160,9 @@ ELSE (FCGI_FOUND)
       MESSAGE(FATAL_ERROR "Could not find FCGI")
 ENDIF (FCGI_FOUND)
 
+######################### thread ##################################
+
 FIND_PACKAGE ( Threads REQUIRED )
 
 add_subdirectory (simfcgi)
+add_subdirectory (simproto)
