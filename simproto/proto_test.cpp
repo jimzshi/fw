@@ -126,7 +126,13 @@ int main(int argc, char* argv[]) {
         ZKS_WARN(g_logger, "proto_test-main", "thread_count is not found. use default setting: %d", thread_count);
     }
     ZKS_INFO(g_logger, "proto_test-main", "use %d threads", thread_count);
-    unsigned short int server_port = 9999;
+	zks::u8string server_addr;
+	if (g_conf.option("proto_test", "server_addr", &server_addr) < 0) {
+		server_addr = "127.0.0.1";
+		ZKS_WARN(g_logger, "proto_test-main", "server_addr is not found. use default setting: %s", server_addr.c_str());
+	}
+	ZKS_INFO(g_logger, "proto_test-main", "use server_addr: %s", server_addr.c_str());
+	unsigned short int server_port = 9999;
     if (g_conf.option_num("proto_test", "server_port", &server_port) < 0) {
         server_port = 9999;
         ZKS_WARN(g_logger, "proto_test-main", "server_port is not found. use default setting: %d", server_port);
@@ -139,8 +145,9 @@ int main(int argc, char* argv[]) {
     }
     ZKS_INFO(g_logger, "proto_test-main", "test will push %d request on server", times);
 
+
     asio::ip::address_v4 localhost;
-    localhost.from_string("127.0.0.1");
+	localhost = asio::ip::address_v4::from_string(server_addr.str());
     svr_ept.address(localhost);
     svr_ept.port(server_port);
 
@@ -154,9 +161,9 @@ int main(int argc, char* argv[]) {
     auto succ = std::count(res.begin(), res.end(), 0);
     ZKS_NOTICE(g_logger, "proto_test-main", "%d request sent to server at %d, using %d concurrent threads.",
             times, server_port, thread_count);
-    ZKS_NOTICE(g_logger, "proto_test-main", "succeeded: %d, test lasted %dms, %f req/s", succ,
-            std::chrono::duration_cast<std::chrono::milliseconds>(end_tp-start_tp).count(),
-            float(times)/std::chrono::duration_cast<std::chrono::seconds>(end_tp-start_tp).count());
+	auto lasts_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_tp - start_tp).count();
+	ZKS_NOTICE(g_logger, "proto_test-main", "succeeded: %d, test lasted %dms, %f req/s", succ, lasts_ms,
+		float(times) * 1000.0 / lasts_ms);
     return 0;
 }
 

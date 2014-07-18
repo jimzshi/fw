@@ -17,12 +17,12 @@ SET(_simproto_definitions PACKAGE_NAME=\"asio\"
 add_executable (simproto simproto.cpp test.pb.cc)
 SET_TARGET_PROPERTIES(simproto PROPERTIES
         COMPILE_DEFINITIONS "${_simproto_definitions}")
-target_link_libraries (simproto ${FCGI_LIBRARY} ${ZKS_LIBRARY} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ssl crypto c++)
+target_link_libraries (simproto ${FCGI_LIBRARY} ${ZKS_LIBRARY} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ssl crypto $<$<CXX_COMPILER_ID:Clang>:c++>)
 
 add_executable (proto_test proto_test.cpp test.pb.cc)
 SET_TARGET_PROPERTIES(proto_test PROPERTIES
         COMPILE_DEFINITIONS "${_simproto_definitions}")
-target_link_libraries (proto_test ${FCGI_LIBRARY} ${ZKS_LIBRARY} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ssl crypto c++)
+target_link_libraries (proto_test ${FCGI_LIBRARY} ${ZKS_LIBRARY} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ssl crypto $<$<CXX_COMPILER_ID:Clang>:c++>)
 
 
 install (TARGETS simproto proto_test DESTINATION bin)

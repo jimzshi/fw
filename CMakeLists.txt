@@ -56,7 +56,7 @@ FIND_PATH(ASIO_INCLUDE_DIR
   /usr/local/include/
   #MSVC
   "$ENV{LIB_DIR}/include"
-  $ENV{ASIO_INCLUDE_PATH}
+  "$ENV{ASIO_INCLUDE_PATH}"
   #mingw
   c:/msys/local/include
   )
@@ -87,7 +87,7 @@ FIND_PATH(PROTOBUF_INCLUDE_DIR
   #mingw
   c:/msys/local/include
   )
-FIND_LIBRARY(PROTOBUF_LIBRARY NAMES protobuf PATHS 
+FIND_LIBRARY(PROTOBUF_LIBRARY NAMES protobuf libprotobuf PATHS 
   /usr/local/lib 
   /usr/lib 
   "$ENV{HOME}/local/lib"
@@ -108,6 +108,8 @@ IF (PROTOBUF_FOUND)
       MESSAGE(STATUS "Found google/protobuf/message.h : ${PROTOBUF_INCLUDE_DIR}")
    ENDIF (NOT PROTOBUF_FIND_QUIETLY)
 ELSE (PROTOBUF_FOUND)
+	  MESSAGE(STATUS "include: ${PROTOBUF_INCLUDE_DIR}")
+	  MESSAGE(STATUS "lib: ${PROTOBUF_LIBRARY}")
       MESSAGE(FATAL_ERROR "Could not find protobuf")
 ENDIF (PROTOBUF_FOUND)
 
@@ -121,7 +123,7 @@ FIND_PATH(FCGI_INCLUDE_DIR
   /usr/include/fastcgi
   #MSVC
   "$ENV{LIB_DIR}/include"
-  $ENV{INCLUDE}
+  $ENV{FCGI_INCLUDE_PATH}
   #mingw
   c:/msys/local/include
   )
@@ -131,7 +133,7 @@ FIND_LIBRARY(FCGI_LIBRARY NAMES fcgi libfcgi PATHS
   $ENV{HOME}/local
   #MSVC
   "$ENV{LIB_DIR}/lib"
-  $ENV{LIB}
+  $ENV{FCGI_LIBRARY_PATH}
   #mingw
   c:/msys/local/lib
   )
@@ -141,14 +143,14 @@ FIND_LIBRARY(FCGIXX_LIBRARY NAMES fcgi++ libfcgi++ PATHS
   $ENV{HOME}/local
   #MSVC
   "$ENV{LIB_DIR}/lib"
-  $ENV{LIB}
+  $ENV{FCGI_LIBRARY_PATH}
   #mingw
   c:/msys/local/lib
   )
   
-IF (FCGI_INCLUDE_DIR AND FCGI_LIBRARY AND FCGIXX_LIBRARY)
+IF (FCGI_INCLUDE_DIR AND FCGI_LIBRARY)
    SET(FCGI_FOUND TRUE)
-ENDIF (FCGI_INCLUDE_DIR AND FCGI_LIBRARY AND FCGIXX_LIBRARY)
+ENDIF (FCGI_INCLUDE_DIR AND FCGI_LIBRARY)
 
 IF (FCGI_FOUND)
    IF (NOT FCGI_FIND_QUIETLY)
@@ -157,7 +159,10 @@ IF (FCGI_FOUND)
       MESSAGE(STATUS "Found FCGI++ lib: ${FCGIXX_LIBRARY}")
    ENDIF (NOT FCGI_FIND_QUIETLY)
 ELSE (FCGI_FOUND)
-      MESSAGE(FATAL_ERROR "Could not find FCGI")
+	  MESSAGE(STATUS "include: ${FCGI_INCLUDE_DIR}")
+	  MESSAGE(STATUS "lib: ${FCGI_LIBRARY_PATH}")
+	  MESSAGE(STATUS "lib++: ${FCGIXX_LIBRARY}")
+	  MESSAGE(FATAL_ERROR "Could not find FCGI")
 ENDIF (FCGI_FOUND)
 
 ######################### thread ##################################

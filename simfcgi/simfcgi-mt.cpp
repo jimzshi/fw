@@ -5,6 +5,7 @@
  *      Author: zks
  */
 
+#include "libzks/configure.h"
 #include "libzks/json.h"
 #include "libzks/u8string.h"
 #include "libzks/utility.h"
@@ -13,8 +14,10 @@
 
 #include "fcgi_config.h"
 
+#ifdef ZKS_OS_GNULINUX_
 #include <pthread.h>
 #include <sys/types.h>
+#endif
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
