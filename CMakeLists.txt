@@ -8,6 +8,10 @@ add_compile_options ($<$<CXX_COMPILER_ID:Clang>:-O2>)
 
 set( CMAKE_VERBOSE_MAKEFILE on )
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	string(CONCAT CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} " -framework CoreFoundation -framework IOKit")
+endif()
+
 ######################### libzks ##################################
 
 FIND_PATH(ZKS_INCLUDE_DIR
@@ -118,6 +122,7 @@ ENDIF (PROTOBUF_FOUND)
 FIND_PATH(FCGI_INCLUDE_DIR
   fcgio.h
   PATHS
+  $ENV{HOME}/local/include
   /usr/include
   /usr/local/include
   /usr/include/fastcgi
@@ -130,7 +135,7 @@ FIND_PATH(FCGI_INCLUDE_DIR
 FIND_LIBRARY(FCGI_LIBRARY NAMES fcgi libfcgi PATHS 
   /usr/local/lib 
   /usr/lib
-  $ENV{HOME}/local
+  $ENV{HOME}/local/lib
   #MSVC
   "$ENV{LIB_DIR}/lib"
   $ENV{FCGI_LIBRARY_PATH}
@@ -140,7 +145,7 @@ FIND_LIBRARY(FCGI_LIBRARY NAMES fcgi libfcgi PATHS
 FIND_LIBRARY(FCGIXX_LIBRARY NAMES fcgi++ libfcgi++ PATHS 
   /usr/local/lib 
   /usr/lib
-  $ENV{HOME}/local
+  $ENV{HOME}/local/lib
   #MSVC
   "$ENV{LIB_DIR}/lib"
   $ENV{FCGI_LIBRARY_PATH}
