@@ -37,6 +37,8 @@ using namespace std;
 zks::simconf g_conf;
 zks::simlog g_logger;
 std::mutex g_accept_mutex;
+int g_fcgi_sock;
+zks::u8string fcgi_uri_path;
 
 void fcgi_thread(int thread_id);
 void fcgi_handler(const Json::Value& in, Json::Value* out);
@@ -60,7 +62,37 @@ int main(int argc, char* argv[]) {
     }
     ZKS_INFO(g_logger, "fcgi-main", "use %d threads", thread_count);
 
+
+    int port = -1;
+    if (g_conf.option_num("simfcgi", "port", &port) < 0) {
+        port = 9000;
+        ZKS_WARN(g_logger, "fcgi-main", "thread_count is not found. use default setting: %d", thread_count);
+    }
+    ZKS_INFO(g_logger, "fcgi-main", "use port: %d", port);
+    zks::u8string sock_port;
+    sock_port.format(8, ":%d", port);
+
+
+    int backlog = -1;
+    if (g_conf.option_num("simfcgi", "backlog", &backlog) < 0) {
+        backlog = 1024;
+        ZKS_WARN(g_logger, "fcgi-main", "backlog is not found. use default setting: %d", backlog);
+    }
+    ZKS_INFO(g_logger, "fcgi-main", "use backlog: %d", backlog);
+
+    if (g_conf.option("simfcgi", "fcgi_uri_path", &fcgi_uri_path) < 0) {
+        fcgi_uri_path = "/fcgi/";
+        ZKS_WARN(g_logger, "fcgi-main", "fcgi_uri_path is not found. use default setting: %d", fcgi_uri_path.c_str());
+    }
+    ZKS_INFO(g_logger, "fcgi-main", "use fcgi_uri_path: %s", fcgi_uri_path.c_str());
+
     FCGX_Init();
+    g_fcgi_sock = FCGX_OpenSocket(sock_port.c_str(), backlog);
+    if (g_fcgi_sock < 0) {
+        ZKS_ERROR(g_logger, "fcgi-main", "can't create fcgi socket. quit now.");
+        return -1;
+    }
+
     std::vector<std::future<void>> futures;
     for (int i = 0; i < thread_count; ++i) {
         futures.push_back(std::async(std::launch::async, fcgi_thread, i));
@@ -75,18 +107,22 @@ int main(int argc, char* argv[]) {
 }
 
 void fcgi_thread(int thread_id) {
-    FCGX_Request request;
-    FCGX_InitRequest(&request, 0, 0);
     zks::u8string thread_name;
     thread_name.format(32, "fcgi-%d", thread_id);
     const char* grp = thread_name.c_str();
+    FCGX_Request request;
+    int ret = FCGX_InitRequest(&request, g_fcgi_sock, 0);
+    if (ret) {
+        ZKS_ERROR(g_logger, grp, "failed to init request: %d. quit thread.", ret);
+        return;
+    }
 
     for (;;) {
         {
             std::lock_guard<std::mutex> Here(g_accept_mutex);
             int res = FCGX_Accept_r(&request);
             if (res < 0) {
-                ZKS_ERROR(g_logger, grp, "failed to accept message: %d. quit.", res);
+                ZKS_ERROR(g_logger, grp, "failed to accept message: %d. ignore this session.", res);
                 break;
             }
         }
@@ -100,14 +136,37 @@ void fcgi_thread(int thread_id) {
                 ZKS_WARN(g_logger, grp, "invalid env: %s", *p);
             } else {
                 ZKS_TRACE(g_logger, grp, "req: %s = %s", env.substr(0, pos).c_str(), env.substr(pos + 1).c_str());
-                in[env.substr(0, pos)] = env.substr(pos + 1);
+                in["ENV"][env.substr(0, pos)] = env.substr(pos + 1);
             }
         }
-        ZKS_INFO(g_logger, grp, "request-uri: %s",
-                in["REQUEST_URI"].isNull() ? "NULL" : in["REQUEST_URI"].asCString());
+        ZKS_INFO(g_logger, grp, "request-uri: %s?%s",
+            in["ENV"]["SCRIPT_NAME"].isNull() ? "NULL" : in["ENV"]["REQUEST_URI"].asCString(),
+            in["ENV"]["QUERY_STRING"].isNull() ? "NULL" : in["ENV"]["REQUEST_URI"].asCString());
+        
+        zks::u8string cmd = in["ENV"]["SCRIPT_NAME"].asString();
+        cmd = cmd.trim_left(fcgi_uri_path);
+        in["cmd"] = cmd.str();
+        zks::u8string query = in["ENV"]["QUERY_STRING"].asString();
+        std::vector<zks::u8string> params = query.split(true, "&", "");
+        bool valid_params = true;
+        for (auto const& p : params) {
+            std::vector<zks::u8string> argv = p.split(true, "=", "");
+            if (argv.size() == 0 || argv.size() > 2 || argv[0].size() == 0) {
+                zks::u8string errmsg;
+                errmsg.format(2048, "failed to parse param: %s. request denied.", p.c_str());
+                (out)["retval"]["errno"] = 1;
+                (out)["retval"]["errmsg"] = errmsg.str();
+                ZKS_ERROR(g_logger, grp, "%s", errmsg.c_str());
+                valid_params = false;
+                break;
+            }
+            in["argv"][argv[0].str()] = argv.size() == 2 ? argv[1].str() : "";
+        }
 
-        fcgi_handler(in, &out);
-
+        if (valid_params) {
+            fcgi_handler(in, &out);
+        }
+        
         Json::FastWriter fwriter;
         string response = fwriter.write(out);
         ZKS_INFO(g_logger, grp, "response: %s", response.c_str());

@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
     std::iota(task_ids.begin(), task_ids.end(), 0);
 
     auto start_tp = hr_clock_t::now();
-    std::vector<int> res = zks::for_each(task_ids.begin(), task_ids.end(), send_a_request, thread_count, std::chrono::milliseconds{5});
+    std::vector<int> res = zks::for_each(task_ids.begin(), task_ids.end(), send_a_request, thread_count, std::chrono::milliseconds{1});
     auto end_tp = hr_clock_t::now();
 
     auto succ = std::count(res.begin(), res.end(), 0);
