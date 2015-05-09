@@ -82,14 +82,14 @@ int main(int argc, char* argv[]) {
 
     if (g_conf.option("simfcgi", "fcgi_uri_path", &fcgi_uri_path) < 0) {
         fcgi_uri_path = "/fcgi/";
-        ZKS_WARN(g_logger, "fcgi-main", "fcgi_uri_path is not found. use default setting: %d", fcgi_uri_path.c_str());
+        ZKS_WARN(g_logger, "fcgi-main", "fcgi_uri_path is not found. use default setting: %s", fcgi_uri_path.c_str());
     }
     ZKS_INFO(g_logger, "fcgi-main", "use fcgi_uri_path: %s", fcgi_uri_path.c_str());
 
     FCGX_Init();
     g_fcgi_sock = FCGX_OpenSocket(sock_port.c_str(), backlog);
     if (g_fcgi_sock < 0) {
-        ZKS_ERROR(g_logger, "fcgi-main", "can't create fcgi socket. quit now.");
+        ZKS_ERROR(g_logger, "fcgi-main", "%s", "can't create fcgi socket. quit now.");
         return -1;
     }
 
