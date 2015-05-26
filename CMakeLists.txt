@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6) 
+cmake_minimum_required (VERSION 2.8.5) 
 project(fw)
 
 add_compile_options ($<$<CXX_COMPILER_ID:Clang>:-std=c++1y>)
@@ -22,16 +22,18 @@ FIND_PATH(ZKS_INCLUDE_DIR
   /usr/local/include/
   #MSVC
   "$ENV{LIB_DIR}/include"
+  "$ENV{UserProfile}/local/include/"
   $ENV{ZKS_INCLUDE_PATH}
   #mingw
   c:/msys/local/include
   )
-FIND_LIBRARY(ZKS_LIBRARY NAMES zks libzks PATHS 
+FIND_LIBRARY(ZKS_LIBRARY NAMES zks libzks zks_d libzks_d PATHS 
   /usr/local/lib 
   /usr/lib 
   "$ENV{HOME}/local/lib"
   #MSVC
   "$ENV{LIB_DIR}/lib"
+  "$ENV{UserProfile}/local/lib"
   $ENV{ZKS_LIB_PATH}
   #mingw
   c:/msys/local/lib
@@ -59,6 +61,7 @@ FIND_PATH(ASIO_INCLUDE_DIR
   /usr/include/
   /usr/local/include/
   #MSVC
+  "$ENV{UserProfile}/local/include/"
   "$ENV{LIB_DIR}/include"
   "$ENV{ASIO_INCLUDE_PATH}"
   #mingw
@@ -79,41 +82,19 @@ ENDIF (ASIO_FOUND)
 
 ######################### protobuff ##################################
 
-FIND_PATH(PROTOBUF_INCLUDE_DIR
-  google/protobuf/message.h
-  PATHS
-  "$ENV{HOME}/local/include/"
-  /usr/include/
-  /usr/local/include/
-  #MSVC
-  "$ENV{LIB_DIR}/include"
-  $ENV{PROTOBUF_INCLUDE_PATH}
-  #mingw
-  c:/msys/local/include
-  )
-FIND_LIBRARY(PROTOBUF_LIBRARY NAMES protobuf libprotobuf PATHS 
-  /usr/local/lib 
-  /usr/lib 
-  "$ENV{HOME}/local/lib"
-  #MSVC
-  "$ENV{LIB_DIR}/lib"
-  $ENV{PROTOBUF_LIB_PATH}
-  #mingw
-  c:/msys/local/lib
-  )
+find_package(Protobuf REQUIRED)
 
-IF (PROTOBUF_INCLUDE_DIR AND PROTOBUF_LIBRARY)
-   SET(PROTOBUF_FOUND TRUE)
-ENDIF (PROTOBUF_INCLUDE_DIR AND PROTOBUF_LIBRARY)
 
 IF (PROTOBUF_FOUND)
    IF (NOT PROTOBUF_FIND_QUIETLY)
-      MESSAGE(STATUS "Found protobuf : ${PROTOBUF_LIBRARY}")
-      MESSAGE(STATUS "Found google/protobuf/message.h : ${PROTOBUF_INCLUDE_DIR}")
+      MESSAGE(STATUS "Found protobuf : ${PROTOBUF_LIBRARIES}")
+      MESSAGE(STATUS "Found google/protobuf/message.h : ${PROTOBUF_INCLUDE_DIRS}")
+	  MESSAGE(STATUS "Found protoc : ${PROTOBUF_PROTOC_EXECUTABLE}")
+	  MESSAGE(STATUS "Found libs : ${PROTOBUF_LIBRARY}")
    ENDIF (NOT PROTOBUF_FIND_QUIETLY)
 ELSE (PROTOBUF_FOUND)
-	  MESSAGE(STATUS "include: ${PROTOBUF_INCLUDE_DIR}")
-	  MESSAGE(STATUS "lib: ${PROTOBUF_LIBRARY}")
+	  MESSAGE(STATUS "include: ${PROTOBUF_INCLUDE_DIRS}")
+	  MESSAGE(STATUS "lib: ${PROTOBUF_LIBRARIES}")
       MESSAGE(FATAL_ERROR "Could not find protobuf")
 ENDIF (PROTOBUF_FOUND)
 
@@ -127,7 +108,9 @@ FIND_PATH(FCGI_INCLUDE_DIR
   /usr/local/include
   /usr/include/fastcgi
   #MSVC
-  "$ENV{LIB_DIR}/include"
+  "$ENV{UserProfile}/local/include/"
+  "$ENV{UserProfile}/local/include/fastcgi/"
+  "$ENV{LIB_DIR}/include/fastcgi/"
   $ENV{FCGI_INCLUDE_PATH}
   #mingw
   c:/msys/local/include
@@ -137,7 +120,8 @@ FIND_LIBRARY(FCGI_LIBRARY NAMES fcgi libfcgi PATHS
   /usr/lib
   $ENV{HOME}/local/lib
   #MSVC
-  "$ENV{LIB_DIR}/lib"
+  "$ENV{UserProfile}/local/lib/"
+  "$ENV{LIB_DIR}/lib/"
   $ENV{FCGI_LIBRARY_PATH}
   #mingw
   c:/msys/local/lib
@@ -147,6 +131,7 @@ FIND_LIBRARY(FCGIXX_LIBRARY NAMES fcgi++ libfcgi++ PATHS
   /usr/lib
   $ENV{HOME}/local/lib
   #MSVC
+  "$ENV{UserProfile}/local/lib"
   "$ENV{LIB_DIR}/lib"
   $ENV{FCGI_LIBRARY_PATH}
   #mingw
