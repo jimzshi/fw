@@ -18,6 +18,8 @@ SET(_simproto_definitions PACKAGE_NAME=\"asio\"
         ASIO_STANDALONE
         GOOGLE_PROTOBUF_NO_RTTI)
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+PROTOBUF_GENERATE_CPP(test.pb.cc test.pb.h test.proto)
 
 add_executable (simproto simproto.cpp test.pb.cc)
 SET_TARGET_PROPERTIES(simproto PROPERTIES
