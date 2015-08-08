@@ -41,7 +41,7 @@ int g_fcgi_sock;
 zks::u8string fcgi_uri_path;
 
 void fcgi_thread(int thread_id);
-void fcgi_handler(const Json::Value& in, Json::Value* out);
+void fcgi_handler(const Json::Value& in, const zks::u8string& data, Json::Value* out);
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -142,7 +142,7 @@ void fcgi_thread(int thread_id) {
         ZKS_INFO(g_logger, grp, "request-uri: %s?%s",
             in["ENV"]["SCRIPT_NAME"].isNull() ? "NULL" : in["ENV"]["REQUEST_URI"].asCString(),
             in["ENV"]["QUERY_STRING"].isNull() ? "NULL" : in["ENV"]["REQUEST_URI"].asCString());
-        
+
         zks::u8string cmd = in["ENV"]["SCRIPT_NAME"].asString();
         cmd = cmd.trim_left(fcgi_uri_path);
         in["cmd"] = cmd.str();
@@ -163,10 +163,31 @@ void fcgi_thread(int thread_id) {
             in["argv"][argv[0].str()] = argv.size() == 2 ? argv[1].str() : "";
         }
 
-        if (valid_params) {
-            fcgi_handler(in, &out);
+
+        zks::u8string data;
+        if(in["ENV"]["REQUEST_METHOD"] == "POST") {
+            const char* clen = in["ENV"]["CONTENT_LENGTH"].asCString();
+            int len = atoi(clen);
+            ZKS_INFO(g_logger, grp, "post data length: %d", len);
+            data.resize(len, '\0');
+            //char* input_buff = new char[len + 1];
+            //int n = FCGX_GetStr(input_buff, len, request.in);
+            int n = FCGX_GetStr((char*)data.data(), len, request.in);
+            if(n < len) {
+                ZKS_ERROR(g_logger, grp, "read in %d, less than %d. error.", n, len);
+                out.clear();
+                out["retval"]["errno"] = -1;
+                out["retval"]["errmsg"] = "InputError";
+                goto handler_finish;
+            }
+            //data.assign(input_buff, len);
+            //delete[] input_buff;
         }
-        
+        if (valid_params) {
+            fcgi_handler(in, data, &out);
+        }
+
+handler_finish:
         Json::FastWriter fwriter;
         string response = fwriter.write(out);
         ZKS_INFO(g_logger, grp, "response: %s", response.c_str());
@@ -178,12 +199,13 @@ void fcgi_thread(int thread_id) {
     return;
 }
 
-void fcgi_handler(const Json::Value& in, Json::Value* out) {
+void fcgi_handler(const Json::Value& in, const zks::u8string& data, Json::Value* out) {
     out->clear();
     (*out)["retval"]["errno"] = 0;
     (*out)["retval"]["errmsg"] = "OK";
     for (auto iter = in.begin(); iter != in.end(); ++iter) {
         (*out)["response"][iter.key().asString()] = *iter;
     }
+    (*out)["data"] = data.str();
     return;
 }
