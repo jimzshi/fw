@@ -4,6 +4,9 @@
  *  Created on: Jul 4, 2014
  *      Author: zks
  */
+#ifdef _WIN32
+#define DLLAPI
+#endif
 
 #include "libzks/configure.h"
 #include "libzks/json.h"

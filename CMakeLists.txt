@@ -14,30 +14,7 @@ endif()
 
 ######################### libzks ##################################
 
-FIND_PATH(ZKS_INCLUDE_DIR
-  libzks/libzks.h
-  PATHS
-  "$ENV{HOME}/local/include/"
-  /usr/include/
-  /usr/local/include/
-  #MSVC
-  "$ENV{LIB_DIR}/include"
-  "$ENV{UserProfile}/local/include/"
-  $ENV{ZKS_INCLUDE_PATH}
-  #mingw
-  c:/msys/local/include
-  )
-FIND_LIBRARY(ZKS_LIBRARY NAMES zks libzks zks_d libzks_d PATHS 
-  /usr/local/lib 
-  /usr/lib 
-  "$ENV{HOME}/local/lib"
-  #MSVC
-  "$ENV{LIB_DIR}/lib"
-  "$ENV{UserProfile}/local/lib"
-  $ENV{ZKS_LIB_PATH}
-  #mingw
-  c:/msys/local/lib
-  )
+include(libzks.cmake)
 
 IF (ZKS_INCLUDE_DIR AND ZKS_LIBRARY)
    SET(ZKS_FOUND TRUE)
@@ -100,60 +77,14 @@ ENDIF (PROTOBUF_FOUND)
 
 ######################### libfcgi ##################################
 
-FIND_PATH(FCGI_INCLUDE_DIR
-  fcgio.h
-  PATHS
-  $ENV{HOME}/local/include
-  /usr/include
-  /usr/local/include
-  /usr/include/fastcgi
-  #MSVC
-  "$ENV{UserProfile}/local/include/"
-  "$ENV{UserProfile}/local/include/fastcgi/"
-  "$ENV{LIB_DIR}/include/fastcgi/"
-  $ENV{FCGI_INCLUDE_PATH}
-  #mingw
-  c:/msys/local/include
-  )
-FIND_LIBRARY(FCGI_LIBRARY NAMES fcgi libfcgi PATHS 
-  /usr/local/lib 
-  /usr/lib
-  $ENV{HOME}/local/lib
-  #MSVC
-  "$ENV{UserProfile}/local/lib/"
-  "$ENV{LIB_DIR}/lib/"
-  $ENV{FCGI_LIBRARY_PATH}
-  #mingw
-  c:/msys/local/lib
-  )
-FIND_LIBRARY(FCGIXX_LIBRARY NAMES fcgi++ libfcgi++ PATHS 
-  /usr/local/lib 
-  /usr/lib
-  $ENV{HOME}/local/lib
-  #MSVC
-  "$ENV{UserProfile}/local/lib"
-  "$ENV{LIB_DIR}/lib"
-  $ENV{FCGI_LIBRARY_PATH}
-  #mingw
-  c:/msys/local/lib
-  )
-  
-IF (FCGI_INCLUDE_DIR AND FCGI_LIBRARY)
-   SET(FCGI_FOUND TRUE)
-ENDIF (FCGI_INCLUDE_DIR AND FCGI_LIBRARY)
+include(libfcgi.cmake)
 
-IF (FCGI_FOUND)
-   IF (NOT FCGI_FIND_QUIETLY)
-      MESSAGE(STATUS "Found FCGI lib: ${FCGI_LIBRARY}")
-      MESSAGE(STATUS "Found FCGI include: ${FCGI_INCLUDE_DIR}")
-      MESSAGE(STATUS "Found FCGI++ lib: ${FCGIXX_LIBRARY}")
-   ENDIF (NOT FCGI_FIND_QUIETLY)
-ELSE (FCGI_FOUND)
-	  MESSAGE(STATUS "include: ${FCGI_INCLUDE_DIR}")
-	  MESSAGE(STATUS "lib: ${FCGI_LIBRARY_PATH}")
-	  MESSAGE(STATUS "lib++: ${FCGIXX_LIBRARY}")
-	  MESSAGE(FATAL_ERROR "Could not find FCGI")
-ENDIF (FCGI_FOUND)
+IF (FASTCGI_FOUND)
+    MESSAGE(STATUS "Found fastcgi.h : ${FASTCGI_INCLUDE_DIR}")
+    MESSAGE(STATUS "Found libfcgi.lib : ${FASTCGI_LIBRARY}")
+ELSE (FASTCGI_FOUND)
+    MESSAGE(FATAL_ERROR "Could not find fastcgi")
+ENDIF (FASTCGI_FOUND)
 
 ######################### thread ##################################
 

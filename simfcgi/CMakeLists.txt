@@ -1,8 +1,8 @@
-include_directories (${ZKS_INCLUDE_DIR} ${FCGI_INCLUDE_DIR})
+include_directories (${ZKS_INCLUDE_DIR} ${FASTCGI_INCLUDE_DIR})
 
 add_executable (simfcgi-mt simfcgi-mt.cpp)
 
-set( LD_LIBS ${LD_LIBS} ${FCGI_LIBRARY} ${ZKS_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+set( LD_LIBS ${LD_LIBS} ${FASTCGI_LIBRARY} ${ZKS_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 if(WIN32)
 	set( LD_LIBS ${LD_LIBS} wsock32 ws2_32)
 endif()
