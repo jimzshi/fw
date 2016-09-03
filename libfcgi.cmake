@@ -1,5 +1,5 @@
 FIND_PATH(FASTCGI_INCLUDE_DIR
-  fastcgi/fastcgi.h
+  fastcgi.h
   PATHS
   "$ENV{HOME}/local/include/"
   /usr/include/
